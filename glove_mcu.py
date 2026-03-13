@@ -8,7 +8,7 @@ import serial
 import numpy as np
 
 # Configure your UART port and baud rate
-uart_port = "/dev/ttyACM0"  # Main board UART port
+uart_port = "/dev/ttyUSB2"  # Main board UART port
 # uart_port = "/dev/tty.usbmodem57340031741"  # Main board UART port
 baud_rate = 921600  # Main board baud rate
 
