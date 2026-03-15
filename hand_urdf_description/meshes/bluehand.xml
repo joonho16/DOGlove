@@ -1,0 +1,143 @@
+<mujoco model="hand_urdf">
+  <compiler angle="radian"/>
+
+  <asset>
+    <mesh name="base_link" content_type="model/stl" file="base_link.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="mcp2_1" content_type="model/stl" file="mcp2_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="pp2_1" content_type="model/stl" file="pp2_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="mp2_1" content_type="model/stl" file="mp2_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="dp2_1" content_type="model/stl" file="dp2_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="meta2_1" content_type="model/stl" file="meta2_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="meta1_1" content_type="model/stl" file="meta1_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="mcp1_1" content_type="model/stl" file="mcp1_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="pp1_1" content_type="model/stl" file="pp1_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="mp1_1" content_type="model/stl" file="mp1_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="dp1_1" content_type="model/stl" file="dp1_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="meta3_1" content_type="model/stl" file="meta3_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="mcp3_1" content_type="model/stl" file="mcp3_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="pp3_1" content_type="model/stl" file="pp3_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="mp3_1" content_type="model/stl" file="mp3_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="dp3_1" content_type="model/stl" file="dp3_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="meta4_1" content_type="model/stl" file="meta4_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="mcp4_1" content_type="model/stl" file="mcp4_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="pp4_1" content_type="model/stl" file="pp4_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="mp4_1" content_type="model/stl" file="mp4_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="dp4_1" content_type="model/stl" file="dp4_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="act1_1" content_type="model/stl" file="act1_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="act2_1" content_type="model/stl" file="act2_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="act3_1" content_type="model/stl" file="act3_1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="act4_1" content_type="model/stl" file="act4_1.stl" scale="0.001 0.001 0.001"/>
+  </asset>
+
+  <worldbody>
+    <geom type="mesh" mesh="base_link"/>
+    <geom type="mesh" mesh="meta2_1"/>
+    <geom type="mesh" mesh="meta1_1"/>
+    <geom type="mesh" mesh="meta3_1"/>
+    <geom type="mesh" mesh="meta4_1"/>
+    <body name="mcp2_1" pos="-0.029022 0.100047 -0.013279">
+      <inertial pos="-0.00085722 0.00842528 0.00865166" quat="0.707107 0.707107 0 0" mass="0.0150899" diaginertia="2e-06 2e-06 1e-06"/>
+      <joint name="aa2" pos="0 0 0" axis="0 -0.173648 0.984808"/>
+      <geom pos="0.029022 -0.100047 0.013279" quat="1 0 0 0" type="mesh" mesh="mcp2_1"/>
+      <body name="pp2_1" pos="-0.008953 0.01468 0.010509">
+        <inertial pos="0.00558963 0.0222004 0.00172825" quat="0.707107 0.707107 0 0" mass="0.0125687" diaginertia="3e-06 3e-06 2e-06"/>
+        <joint name="mcp2" pos="0 0 0" axis="-0.996195 -0.085832 -0.015134"/>
+        <geom pos="0.037975 -0.114727 0.00277" quat="1 0 0 0" type="mesh" mesh="pp2_1"/>
+        <body name="mp2_1" pos="-0.003931 0.039809 -3.3e-05">
+          <inertial pos="0.00676453 0.0144678 0.00126187" quat="0.707107 0.707107 0 0" mass="0.0129842" diaginertia="2e-06 2e-06 1e-06"/>
+          <joint name="pip2" pos="0 0 0" axis="-0.996195 -0.085832 -0.015134"/>
+          <geom pos="0.041906 -0.154536 0.002803" quat="1 0 0 0" type="mesh" mesh="mp2_1"/>
+          <body name="dp2_1" pos="8.7e-05 0.028112 1.9e-05">
+            <inertial pos="0.00429285 0.0142959 -0.000246767" mass="0.0151738" diaginertia="1e-06 1e-06 1e-06"/>
+            <joint name="dip2" pos="0 0 0" axis="-0.996195 -0.085832 -0.015134"/>
+            <geom pos="0.041819 -0.182648 0.002784" quat="1 0 0 0" type="mesh" mesh="dp2_1"/>
+            <site name="tip2_site" size="0.0001" rgba="1 0 0 1" pos="0 0.028 0"/>
+          </body>
+        </body>
+      </body>
+      <body name="act2_1" pos="0.001613 0.018389 0.02081">
+        <inertial pos="-0.00292034 -0.00937475 0.0141296" quat="0.707107 0.707107 0 0" mass="0.050027" diaginertia="1e-05 8e-06 6e-06"/>
+        <joint name="act2" pos="0 0 0" axis="-0.996195 -0.085832 -0.015134"/>
+        <geom pos="0.027409 -0.118436 -0.007531" quat="1 0 0 0" type="mesh" mesh="act2_1"/>
+      </body>
+    </body>
+    <body name="mcp1_1" pos="-0.029913 0.05726 -0.033338">
+      <inertial pos="-0.0118924 -0.00197871 0.00110107" quat="0.5 0.5 0.5 0.5" mass="0.0150899" diaginertia="2e-06 2e-06 1e-06"/>
+      <joint name="aa1" pos="0 0 0" axis="-0.42367 -0.700574 0.574195"/>
+      <geom pos="0.029913 -0.05726 0.033338" quat="1 0 0 0" type="mesh" mesh="mcp1_1"/>
+      <body name="pp1_1" pos="-0.018968 0.004511 0.005092">
+        <inertial pos="-0.0183518 0.00316656 -0.0134266" quat="0.5 0.5 0.5 0.5" mass="0.0125687" diaginertia="3e-06 3e-06 2e-06"/>
+        <joint name="mcp1" pos="0 0 0" axis="0.037066 -0.646775 -0.76178"/>
+        <geom pos="0.048881 -0.061771 0.028246" quat="1 0 0 0" type="mesh" mesh="pp1_1"/>
+        <body name="mp1_1" pos="-0.032135 0.006716 -0.027613">
+          <inertial pos="-0.012269 0.0102303 0.00121932" quat="0.5 0.5 0.5 0.5" mass="0.0129842" diaginertia="2e-06 2e-06 1e-06"/>
+          <joint name="pip1" pos="0 0 0" axis="0.037066 -0.646775 -0.76178"/>
+          <geom pos="0.081016 -0.068487 0.055859" quat="1 0 0 0" type="mesh" mesh="mp1_1"/>
+          <body name="dp1_1" pos="-0.023397 0.020451 -0.00078">
+            <inertial pos="-0.0109583 0.00245434 -0.00983685" mass="0.0151738" diaginertia="1e-06 1e-06 1e-06"/>
+            <joint name="dip1" pos="0 0 0" axis="0.037066 -0.646775 -0.76178"/>
+            <geom pos="0.104413 -0.088938 0.056639" quat="1 0 0 0" type="mesh" mesh="dp1_1"/>
+            <site name="tip1_site" size="0.0001" rgba="1 0 0 1" pos="0 0.028 0"/>
+          </body>
+        </body>
+      </body>
+      <body name="act1_1" pos="-0.026658 -0.007903 0.000818">
+        <inertial pos="-0.000833478 -0.010584 0.0135401" quat="0.433758 0.539223 -0.0208348 0.721567" mass="0.050027" diaginertia="1.05688e-05 7.63555e-06 4.7956e-06"/>
+        <joint name="act1" pos="0 0 0" axis="0.037066 -0.646775 -0.76178"/>
+        <geom pos="0.056571 -0.049357 0.03252" quat="1 0 0 0" type="mesh" mesh="act1_1"/>
+      </body>
+    </body>
+    <body name="mcp3_1" pos="0.00045 0.101099 -0.013093">
+      <inertial pos="3.79376e-07 0.00846239 0.0086577" quat="0.707107 0.707107 0 0" mass="0.0150899" diaginertia="2e-06 2e-06 1e-06"/>
+      <joint name="aa3" pos="0 0 0" axis="0 -0.173648 0.984808"/>
+      <geom pos="-0.00045 -0.101099 0.013093" quat="1 0 0 0" type="mesh" mesh="mcp3_1"/>
+      <body name="pp3_1" pos="0.0075 0.015388 0.010633">
+        <inertial pos="-0.00749962 0.0216372 0.00162929" quat="0.707107 0.707107 0 0" mass="0.0125687" diaginertia="3e-06 3e-06 2e-06"/>
+        <joint name="mcp3" pos="0 0 0" axis="-1 0 0"/>
+        <geom pos="-0.00795 -0.116487 0.00246" quat="1 0 0 0" type="mesh" mesh="pp3_1"/>
+        <body name="mp3_1" pos="-0.0155 0.04 0">
+          <inertial pos="0.00800038 0.0138322 0.00115081" quat="0.707107 0.707107 0 0" mass="0.0129842" diaginertia="2e-06 2e-06 1e-06"/>
+          <joint name="pip3" pos="0 0 0" axis="-1 0 0"/>
+          <geom pos="0.00755 -0.156487 0.00246" quat="1 0 0 0" type="mesh" mesh="mp3_1"/>
+          <body name="dp3_1" pos="0.0135 0.028 0">
+            <inertial pos="-0.00549962 0.0138749 -0.000320751" mass="0.0151738" diaginertia="1e-06 1e-06 1e-06"/>
+            <joint name="dip3" pos="0 0 0" axis="-1 0 0"/>
+            <geom pos="-0.00595 -0.184487 0.00246" quat="1 0 0 0" type="mesh" mesh="dp3_1"/>
+            <site name="tip3_site" size="0.0001" rgba="1 0 0 1" pos="0 0.028 0"/>
+          </body>
+        </body>
+      </body>
+      <body name="act3_1" pos="0.0035 0.01817 0.020771">
+        <inertial pos="-0.00349962 -0.00909928 0.0141781" quat="0.707107 0.707107 0 0" mass="0.050027" diaginertia="1e-05 8e-06 6e-06"/>
+        <joint name="act3" pos="0 0 0" axis="-1 0 0"/>
+        <geom pos="-0.00395 -0.119269 -0.007678" quat="1 0 0 0" type="mesh" mesh="act3_1"/>
+      </body>
+    </body>
+    <body name="mcp4_1" pos="0.029803 0.092965 -0.014527">
+      <inertial pos="0.000857375 0.00842528 0.00865091" quat="0.707107 0.707107 0 0" mass="0.0150899" diaginertia="2e-06 2e-06 1e-06"/>
+      <joint name="aa4" pos="0 0 0" axis="0 -0.173648 0.984808"/>
+      <geom pos="-0.029803 -0.092965 0.014527" quat="1 0 0 0" type="mesh" mesh="mcp4_1"/>
+      <body name="pp4_1" pos="0.008953 0.01468 0.010508">
+        <inertial pos="-0.00558948 0.0222003 0.00172851" quat="0.707107 0.707107 0 0" mass="0.0125687" diaginertia="3e-06 3e-06 2e-06"/>
+        <joint name="mcp4" pos="0 0 0" axis="-0.996195 0.085832 0.015134"/>
+        <geom pos="-0.038756 -0.107645 0.004019" quat="1 0 0 0" type="mesh" mesh="pp4_1"/>
+        <body name="mp4_1" pos="-0.012008 0.041183 0.000209">
+          <inertial pos="0.00917463 0.0130938 0.00102012" quat="0.707107 0.707107 0 0" mass="0.0129842" diaginertia="2e-06 2e-06 1e-06"/>
+          <joint name="pip4" pos="0 0 0" axis="-1 0 0"/>
+          <geom pos="-0.026748 -0.148828 0.00381" quat="1 0 0 0" type="mesh" mesh="mp4_1"/>
+          <body name="dp4_1" pos="0.015852 0.026738 -0.000223">
+            <inertial pos="-0.00429269 0.0142959 -0.000246515" mass="0.0151738" diaginertia="1e-06 1e-06 1e-06"/>
+            <joint name="dip4" pos="0 0 0" axis="-0.996195 0.085832 0.015134"/>
+            <geom pos="-0.0426 -0.175566 0.004033" quat="1 0 0 0" type="mesh" mesh="dp4_1"/>
+            <site name="tip4_site" size="0.0001" rgba="1 0 0 1" pos="0 0.028 0"/>
+          </body>
+        </body>
+      </body>
+      <body name="act4_1" pos="0.005361 0.017788 0.020703">
+        <inertial pos="-0.00405351 -0.00877375 0.0142359" quat="0.707107 0.707107 0 0" mass="0.050027" diaginertia="1e-05 8e-06 6e-06"/>
+        <joint name="act4" pos="0 0 0" axis="-0.996195 0.085832 0.015134"/>
+        <geom pos="-0.035164 -0.110753 -0.006176" quat="1 0 0 0" type="mesh" mesh="act4_1"/>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>
