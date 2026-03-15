@@ -8,7 +8,7 @@ import serial
 import numpy as np
 
 # Configure your UART port and baud rate
-uart_port = "/dev/ttyUSB1"  # Main board UART port
+uart_port = "/dev/ttyUSB2"  # Main board UART port
 # uart_port = "/dev/tty.usbmodem57340031741"  # Main board UART port
 baud_rate = 921600  # Main board baud rate
 
@@ -268,11 +268,11 @@ class UDPReceiver:
             urdf_joint_angles[14] = np.deg2rad(joint_angles[14]-270) # 14 - little_pip
             urdf_joint_angles[15] = np.deg2rad(-(joint_angles[15]-180)) # 15 - little_mcp_s
 
-            urdf_joint_angles[16] = np.deg2rad((servo_angles[0]-334.7)) # 16 - thumb_mcp_b
-            urdf_joint_angles[17] = np.deg2rad((servo_angles[1]-250.0)) # 17 - index_mcp_b
-            urdf_joint_angles[18] = np.deg2rad((servo_angles[2]-171.4)) # 18 - middle_mcp_b
-            urdf_joint_angles[19] = np.deg2rad((servo_angles[3]-146.1)) # 19 - ring_mcp_b
-            urdf_joint_angles[20] = np.deg2rad((servo_angles[4]-161.1)) # 20 - little_mcp_b
+            urdf_joint_angles[16] = np.deg2rad((servo_angles[0]-388.2)) # 16 - thumb_mcp_b
+            urdf_joint_angles[17] = np.deg2rad((servo_angles[1]-257.0)) # 17 - index_mcp_b
+            urdf_joint_angles[18] = np.deg2rad((servo_angles[2]-180.6)) # 18 - middle_mcp_b
+            urdf_joint_angles[19] = np.deg2rad((servo_angles[3]-158.1)) # 19 - ring_mcp_b
+            urdf_joint_angles[20] = np.deg2rad((servo_angles[4]-163.1)) # 20 - little_mcp_b
 
             urdf_joint_angles = tuple(urdf_joint_angles)
 
