@@ -8,7 +8,7 @@ import serial
 import numpy as np
 
 # Configure your UART port and baud rate
-uart_port = "/dev/ttyUSB2"  # Main board UART port
+uart_port = "/dev/ttyUSB3"  # Main board UART port
 # uart_port = "/dev/tty.usbmodem57340031741"  # Main board UART port
 baud_rate = 921600  # Main board baud rate
 
@@ -21,7 +21,7 @@ block_size = 76  # Total size including header, data, and CRC
 udp_ip = "127.0.0.1"  # Localhost IP
 udp_port = 5009  # Port for joint data
 udp_port_servo = 5010  # Port for servo data
-# udp_port_lra = 5012  # Port for LRA data
+udp_port_lra = 5012  # Port for LRA data
 
 class UARTReader:
     def __init__(self):
@@ -29,8 +29,8 @@ class UARTReader:
         self.running = True
         self.serial_port = serial.Serial(uart_port, baud_rate, timeout=1)
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        # self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        # self.sock.bind((udp_ip, udp_port_lra))
+        self.lra_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.lra_sock.bind((udp_ip, udp_port_lra))
         self.write_fps = 30
 
     def read_from_uart(self):
@@ -120,63 +120,49 @@ class UARTReader:
         message = struct.pack(format_string, *joint_angles)
         self.udp_socket.sendto(message, (udp_ip, udp_port))
     
-    # def lra_control(self, channel, wave, duration):
-    #     """send_data = 0x55, 0xAA, channel(0-4), wave, duration_h, duration_l, checksum"""
-    #     if channel not in range(5):
-    #         print("Invalid channel. Please choose a channel between 0-4.")
-    #         return
-    #     if wave not in range(256):
-    #         print("Invalid wave. Please choose a wave between 0-255.")
-    #         return
-    #     if duration not in range(65536):
-    #         print("Invalid duration. Please choose a duration between 0-65535.")
-    #         return
-    #     duration_H = (duration >> 8) & 0xFF
-    #     duration_L = duration & 0xFF
-    #     checksum = (channel + wave + duration_H + duration_L) & 0xFF
-    #     send_data = [0x55, 0xAA, channel, wave, duration_H, duration_L, checksum]
-    #     # print(f"send data: {bytes(send_data).hex()}")
-    #     self.serial_port.write(bytes(send_data))
+    def lra_control(self, channel, wave, duration):
+        """send_data = 0x55, 0xAA, channel(0-4), wave, duration_h, duration_l, checksum"""
+        if channel not in range(5):
+            return
+        if wave not in range(256):
+            return
+        if duration not in range(65536):
+            return
+        duration_H = (duration >> 8) & 0xFF
+        duration_L = duration & 0xFF
+        checksum = (channel + wave + duration_H + duration_L) & 0xFF
+        send_data = [0x55, 0xAA, channel, wave, duration_H, duration_L, checksum]
+        self.serial_port.write(bytes(send_data))
     
-    # def listen(self):
-    #     print(f"Listening on {udp_ip}:{udp_port_lra}...")
-    #     while self.running:
-    #         data, addr = self.sock.recvfrom(4*4)  # 4 bytes per float, 16 floats
-    #         if data:
-    #             # Unpack the received float
-    #             received_kp = struct.unpack("f"*4, data)
+    def listen_lra(self):
+        """Receive force(g) from servo.py and control LRA per Table I."""
+        print(f"LRA listening on {udp_ip}:{udp_port_lra}...")
+        while self.running:
+            data, addr = self.lra_sock.recvfrom(4 * 4)
+            if data:
+                eff = struct.unpack("f" * 4, data)
+                for i in range(4):
+                    if eff[i] < 50:
+                        self.lra_control(i, 0, 1)
+                    else:
+                        self.lra_control(i, 56, 30)
 
-    #             # Store the most recent pressure
-    #             self.most_recent_kp = received_kp
-
-    #             # print(f"Received kp (as float): {kp}")
-    #             # print("-" * 40)
-
-    #             # Control the LRA
-    #             k = 100
-    #             # k = 2000
-    #             for i in range(len(received_kp)):
-    #                 if received_kp[i] > 10 and received_kp[i] < k:
-    #                     self.lra_control(i, 56, int(1000/self.write_fps))
-    #                     # self.lra_control(i, 222, int(1000/self.write_fps))
-    #                 else:
-    #                     self.lra_control(i, 222, 100)
-    #             time.sleep(1/self.write_fps)
+                time.sleep(1 / self.write_fps)
 
     def start(self):
         print("UART reader started")
         self.thread = threading.Thread(target=self.read_from_uart)
         self.thread.start()
-        # self.thread_lra = threading.Thread(target=self.listen)
-        # self.thread_lra.start()
+        self.thread_lra = threading.Thread(target=self.listen_lra, daemon=True)
+        self.thread_lra.start()
 
     def stop(self):
         print("Closing UART port...")
         self.running = False
         self.thread.join()
-        # self.thread_lra.join()
+        self.thread_lra.join()
         self.udp_socket.close()
-        # self.sock.close()
+        self.lra_sock.close()
         self.serial_port.close()
         
 
@@ -249,7 +235,7 @@ class UDPReceiver:
 
             urdf_joint_angles[0] = np.deg2rad(-(joint_angles[0]-90)) # 0 - thumb_dip
             urdf_joint_angles[1] = np.deg2rad(joint_angles[1]-270) # 1 - thumb_pip
-            urdf_joint_angles[2] = np.deg2rad(joint_angles[2]-180) # 2 - thumb_mcp_s
+            urdf_joint_angles[2] = np.deg2rad(joint_angles[2]-150) # 2 - thumb_mcp_s
             urdf_joint_angles[3] = np.deg2rad(joint_angles[3]-270) # 3 - thumb_mcp_r
 
             urdf_joint_angles[4] = np.deg2rad(-(joint_angles[4]-90)) # 4 - index_dip
@@ -268,11 +254,11 @@ class UDPReceiver:
             urdf_joint_angles[14] = np.deg2rad(joint_angles[14]-270) # 14 - little_pip
             urdf_joint_angles[15] = np.deg2rad(-(joint_angles[15]-180)) # 15 - little_mcp_s
 
-            urdf_joint_angles[16] = np.deg2rad((servo_angles[0]-388.2)) # 16 - thumb_mcp_b
-            urdf_joint_angles[17] = np.deg2rad((servo_angles[1]-257.0)) # 17 - index_mcp_b
-            urdf_joint_angles[18] = np.deg2rad((servo_angles[2]-180.6)) # 18 - middle_mcp_b
-            urdf_joint_angles[19] = np.deg2rad((servo_angles[3]-158.1)) # 19 - ring_mcp_b
-            urdf_joint_angles[20] = np.deg2rad((servo_angles[4]-163.1)) # 20 - little_mcp_b
+            urdf_joint_angles[16] = np.deg2rad(servo_angles[0]) # 16 - thumb_mcp_b
+            urdf_joint_angles[17] = np.deg2rad(servo_angles[1]) # 17 - index_mcp_b
+            urdf_joint_angles[18] = np.deg2rad(servo_angles[2]) # 18 - middle_mcp_b
+            urdf_joint_angles[19] = np.deg2rad(servo_angles[3]) # 19 - ring_mcp_b
+            urdf_joint_angles[20] = np.deg2rad(servo_angles[4]) # 20 - little_mcp_b
 
             urdf_joint_angles = tuple(urdf_joint_angles)
 

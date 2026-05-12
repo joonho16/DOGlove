@@ -217,7 +217,7 @@ def main():
                     data.qvel[idx] = 0.0
 
                 # 2) AA 직접 매핑: DOGlove split → bluehand aa (엄지만 부호 반전 + 스케일)
-                THUMB_AA_SCALE = 2.0
+                THUMB_AA_SCALE = 5.0
                 for i, (src_idx, dst_idx) in enumerate(zip(aa_src_qpos, aa_dst_qpos)):
                     if i == 0:  # thumb
                         data.qpos[dst_idx] = -data.qpos[src_idx] * THUMB_AA_SCALE
@@ -227,7 +227,7 @@ def main():
                 # 3) FE 매핑: DOGlove bend_3 → bluehand mcp, coupling → pip/dip/act
                 #    DOGlove bend는 음수(굽힘), bluehand mcp는 양수(굽힘) → 부호 반전
                 #    clamp >= 0 (역방향 꺾임 방지), scale 1.5 (굽힘 보정)
-                FE_SCALE = 1.5
+                FE_SCALE = 2.0
                 for i in range(len(fe_src_qpos)):
                     mcp_val = max(0.0, -data.qpos[fe_src_qpos[i]] * FE_SCALE)
                     data.qpos[fe_mcp_qpos[i]] = mcp_val

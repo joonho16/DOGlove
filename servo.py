@@ -38,7 +38,7 @@ DXL_ID                     = [0, 1, 2, 3, 4]                 # Dynamixe ID
 
 # Use the actual port assigned to the U2D2.
 # ex) Windows: "COM*", Linux: "/dev/ttyUSB*", Mac: "/dev/tty.usbserial-*"
-DEVICENAME                  = '/dev/ttyUSB1'
+DEVICENAME                  = '/dev/ttyUSB2'
 # DEVICENAME                  = '/dev/tty.usbserial-FT88YRMM'
 
 # DEFAULT_POS_SCALE = 2.0 * np.pi / 4096  # 0.088 degrees per unit
@@ -47,11 +47,12 @@ DEFAULT_POS_SCALE = 2.0 * 180 / 4096  # 0.088 degrees per unit
 
 # Force feedback settings
 MODE_CURRENT_BASED_POSITION = 5
-MA_TO_GRAM = 1.13               # mA → gram 변환 계수 (Kt / L_finger / g, URDF 기반 근사)
-FORCE_THRESHOLD_G = 50          # gram - force feedback 시작 threshold
-FORCE_MAX_G = 3000              # gram - maximum force (KP 최대)
+EFFORT_THRESHOLD = 50           # effort - force feedback 시작 threshold
+EFFORT_LRA_MAX = 100            # effort - LRA only 상한, 이상이면 KP도 적용
+EFFORT_MAX = 3000               # effort - maximum (KP 최대)
 KP_MAX = 800                    # Maximum Position P Gain
 SERVO_CURRENT_LIMIT = 150       # mA - DOGlove servo current limit (safety)
+DEBOUNCE_TIME = 0.1             # seconds - threshold 넘은 후 이 시간 유지해야 동작
 
 # bluehand FE joint name -> DOGlove servo ID
 FORCE_MAPPING = {
@@ -66,6 +67,7 @@ data_length = 5  # Number of data values in the block
 # Configure UDP settings
 udp_ip = "127.0.0.1"  # Localhost IP
 udp_port_servo = 5010  # Port to send data to
+udp_port_lra = 5012    # Port for LRA force data
 
 
 class ForceListener(Node):
@@ -87,12 +89,19 @@ class ServoReader:
         self.portHandler = PortHandler(DEVICENAME)
         self.packetHandler = PacketHandler(PROTOCOL_VERSION)
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.lra_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
         # Force feedback state
         self.force_enabled = False
         self.force_listener = None
         self.current_kp = {dxl_id: 0 for dxl_id in DXL_ID}
         self.present_positions = {dxl_id: 0 for dxl_id in DXL_ID}
+        self.effort_above_since = {dxl_id: None for dxl_id in DXL_ID}  # debounce timestamp
+
+        # Servo offset calibration
+        self.servo_offsets = [0.0, 0.0, 0.0, 0.0, 0.0]
+        self.latest_servo_angles = [180.0, 180.0, 180.0, 180.0, 180.0]
+        self.offsets_set = False
 
         # Open the port
         if self.portHandler.openPort():
@@ -164,20 +173,41 @@ class ServoReader:
 
         effort = self.force_listener.latest_effort
 
+        now = time.time()
+        force_values = []
         for bh_name, dxl_id in FORCE_MAPPING.items():
-            current_ma = abs(effort.get(bh_name, 0))
-            force_g = current_ma * MA_TO_GRAM
+            eff = abs(effort.get(bh_name, 0))
 
-            if force_g < FORCE_THRESHOLD_G:
-                kp = 0
+            # Debounce: threshold 넘은 시점 기록, 일정 시간 유지해야 동작
+            if eff >= EFFORT_THRESHOLD:
+                if self.effort_above_since[dxl_id] is None:
+                    self.effort_above_since[dxl_id] = now
+                active = (now - self.effort_above_since[dxl_id]) >= DEBOUNCE_TIME
             else:
-                ratio = min(1.0, (force_g - FORCE_THRESHOLD_G) / (FORCE_MAX_G - FORCE_THRESHOLD_G))
+                self.effort_above_since[dxl_id] = None
+                active = False
+
+            if not active:
+                kp = 0
+                force_values.append(0.0)
+            elif eff < EFFORT_LRA_MAX:
+                # 50-100: LRA only, no KP
+                kp = 0
+                force_values.append(eff)
+            else:
+                # > 100: KP proportional
+                ratio = min(1.0, (eff - EFFORT_LRA_MAX) / (EFFORT_MAX - EFFORT_LRA_MAX))
                 kp = int(KP_MAX * ratio)
+                force_values.append(eff)
 
             # Only write if changed (reduce bus traffic)
             if kp != self.current_kp[dxl_id]:
                 self.current_kp[dxl_id] = kp
                 self.packetHandler.write2ByteTxRx(self.portHandler, dxl_id, ADDR_POSITION_P_GAIN, kp)
+
+        # LRA용 effort 값을 UDP로 전송 (4 fingers: thumb, index, middle, ring)
+        lra_msg = struct.pack("f" * 4, *force_values)
+        self.lra_socket.sendto(lra_msg, (udp_ip, udp_port_lra))
 
         # Update goal position = present position when KP is 0 (free movement)
         # When KP > 0 (force active), hold position for spring-like resistance
@@ -217,22 +247,43 @@ class ServoReader:
                 # print("[ID:%03d] Present Position: %f" % (id, dxl_present_position*DEFAULT_POS_SCALE))
                 servo_joint_angles[id] = dxl_present_position*DEFAULT_POS_SCALE
 
-        print(f"Servo joint angles: {servo_joint_angles}")
+        self.latest_servo_angles = list(servo_joint_angles)
 
-        # Send the first voltage value via UDP
-        # message = struct.pack("f", voltages[0])
-        format_string = "f" * len(servo_joint_angles)
-        # Pack all the values in the list
-        message = struct.pack(format_string, *servo_joint_angles)
+        # Apply offsets if calibrated
+        if self.offsets_set:
+            offset_applied = [servo_joint_angles[i] - self.servo_offsets[i] for i in range(5)]
+            print(f"Servo joint angles (offset): {[round(v, 2) for v in offset_applied]}")
+        else:
+            offset_applied = servo_joint_angles
+            print(f"Servo joint angles: {servo_joint_angles}")
+
+        # Send via UDP
+        format_string = "f" * len(offset_applied)
+        message = struct.pack(format_string, *offset_applied)
         self.udp_socket.sendto(message, (udp_ip, udp_port_servo))
 
         # Force feedback update
         self.update_force_feedback()
 
+    def input_listener(self):
+        """Listen for 'y' input to capture current servo angles as offsets."""
+        while self.running:
+            try:
+                user_input = input("Press 'y' + Enter to set current servo angles as offset: ")
+                if user_input.strip().lower() == 'y':
+                    self.servo_offsets = list(self.latest_servo_angles)
+                    self.offsets_set = True
+                    print(f">>> Offsets set: {[round(v, 2) for v in self.servo_offsets]}")
+            except EOFError:
+                break
+
     def start(self):
         print("Servo reader started")
         self.thread = threading.Thread(target=self.read_from_uart)
         self.thread.start()
+
+        self.input_thread = threading.Thread(target=self.input_listener, daemon=True)
+        self.input_thread.start()
 
         # Add parameter storage for Dynamixel present position and LED status
         for id in DXL_ID:
